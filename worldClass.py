@@ -1,3 +1,7 @@
+import matplotlib.pyplot as plt
+import numpy as np
+import random
+
 class World:
     def __init__(self, state=None, size=None, obstacles=None):
         """
@@ -16,10 +20,52 @@ class World:
             full_path (list) : list of all points in final path between start and goal
         """
 
-        # Edit these to include the constructor use cases
-        self.state = state
-        self.size = size
-        self.obstacles = obstacles
+        predefined_states = [
+            {
+                'size': [10, 10],
+                'obstacles': [
+                    [(2, 2), (4, 2), (4, 4), (2, 4)],  # Square at (3,3)
+                    [(6, 2), (8, 2), (8, 4), (6, 4)],  # Square at (7,3)
+                    [(4, 6), (6, 6), (6, 8), (4, 8)]   # Square at (5,7)
+                ]
+            },
+            {
+                'size': [10, 10],
+                'obstacles': [
+                    [(1.59, 3), (3, 1.59), (4.41, 3), (3, 4.41)],  # Rotated 45° at (3,3)
+                    [(6.27, 2.34), (7.93, 2.93), (7.34, 4.59), (5.68, 4)],  # Rotated ~30° at (7,3)
+                    [(3.58, 6.41), (5, 5), (6.41, 6.41), (5, 7.82)]  # Rotated -45° at (5,7)
+                ]
+            },
+            {
+                'size': [10, 10],
+                'obstacles': [
+                    [(1, 1), (3, 1), (3, 3), (1, 3)],  # Square at (2,2)
+                    [(7, 1), (9, 1), (9, 3), (7, 3)],  # Square at (8,2)
+                    [(4, 7), (6, 7), (6, 9), (4, 9)]   # Square at (5,8)
+                ]
+            },
+            {
+                'size': [10, 10],
+                'obstacles': [
+                    [(3, 3), (5, 3), (5, 5), (3, 5)],  # Square at (4,4)
+                    [(4.5, 3), (6.5, 3), (6.5, 5), (4.5, 5)],  # Slightly right at (5.5,4)
+                    [(3, 4.5), (5, 4.5), (5, 6.5), (3, 6.5)],  # Slightly above at (4,5.5)
+                    [(4.5, 4.5), (6.5, 4.5), (6.5, 6.5), (4.5, 6.5)]  # Top-right at (5.5,5.5)
+                ]
+            },
+        ]
+
+
+        if state == None:
+            self.size = size
+            self.obstacles = obstacles
+        if 0 <= state <= len(predefined_states)-1:
+            self.size = predefined_states[state]['size']
+            self.obstacles = predefined_states[state]['obstacles']
+        else:
+            print("Please enter valid state value")
+            return
 
         self.start = None
         self.goal = None
@@ -28,32 +74,33 @@ class World:
         self.full_path = list()
 
 
-    def generate_env():
-        """
-        Plots the state space and the obstacles.
 
-        Args : None
-
-        Returns : None
-        """
-
-        print("generate_env() called")
-        pass
-
-    def generate_endpoints():
+    def generate_endpoints(self):
         """
         Plots start and goal points in already generated state space.
 
-
         Args : None
 
         Returns : None
         """
 
+        while True:
+            start = (random.randint(1, self.size[0] - 1), random.randint(1, self.size[1] - 1))
+            goal = (random.randint(1, self.size[0] - 1), random.randint(1, self.size[1] - 1))
+            heuristic = np.sqrt((start[0] - goal[0])**2 + (start[1] - goal[1])**2)
+            max_dist = np.sqrt(self.size[0]**2 + self.size[1]**2)
+            if 0.7 * max_dist <= heuristic <= 0.9 * max_dist:
+                self.start = start
+                self.goal = goal
+                break
+        
         print("generate_endpoints() called")
+        print(f"start:{self.start}, goal:{self.goal}")
         pass
 
-    def run_global(GP):
+
+
+    def run_global(self, GP):
         """
         Generates the global planner solution.
 
@@ -64,13 +111,15 @@ class World:
             waypoints (list) : list of waypoints for local planner to follow
         """
 
-        if callable(GP):
-            print(f"run_global() called with Global Planner : {str(GP.__name__)}")
-        else:
+        if not callable(GP):
             print("run_global() called incorrectly -> GP is not a function")
-        pass
+            return
+        
+        print(f"Global Planner : {str(GP.__name__)}")
 
-    def run_local(LP, w1, w2):
+
+
+    def run_local(self, LP, w1, w2):
         """
         Generates the local planner solution given 2 waypoints.
 
@@ -83,36 +132,66 @@ class World:
             local_path (list) : points on the local planner solution
         """
 
-        if callable(LP):
-            print(f"run_local() called with Global Planner : {str(LP.__name__)} between {w1} and {w2}")
-        else:
+        if not callable(LP):
             print("run_local() called incorrectly -> LP is not a function")
-        pass
+            return
+        
+        print(f"Local Planner : {str(LP.__name__)} between {w1} and {w2}")
 
 
-    def display(global_path = 0, waypoints = 0, local_paths = 0):
+
+    def display(self, waypoints=False, local_paths=False, timer=0):
         """
-        Displays different aspects of the solution.
+        Displays different aspects of the solution in a single interactive figure.
 
         Args:
-            global_path (bool) : toggle for displaying global_path
             waypoints (bool) : toggle for displaying waypoints
             local_paths (bool) : toggle for displaying all local paths planned so far
 
         Returns : None
         """
 
-        if global_path:
-            # Do something to show the global path in the figure
-            pass
+        plt.figure(figsize=(5,5))
+        plt.axis([0, self.size[0], 0, self.size[1]])
+        plt.xticks(np.arange(0, self.size[0] + 1, 1))
+        plt.yticks(np.arange(0, self.size[1] + 1, 1))
+        plt.grid(True, linestyle='--', linewidth=0.5)
 
-        if waypoints:
-            # Do something to plot the waypoint points in the figure
-            pass
+        # Plot obstacles
+        for i, obstacle in enumerate(self.obstacles):
+            obstacle_polygon = np.array(obstacle)
+            plt.fill(obstacle_polygon[:, 0], obstacle_polygon[:, 1], color="black", alpha=0.6, label=f"Obstacle {i+1}")
 
-        if local_paths:
-            # Do something to show the local paths in the figure as they are being drawn
-            pass
+        # Plot waypoints
+        if waypoints and self.waypoints:
+            waypoint_coords = np.array(self.waypoints)
+            plt.scatter(waypoint_coords[:, 0], waypoint_coords[:, 1], color="red", s=80, marker="o", edgecolors="black", label="Waypoints")
 
-    
+        # # DEBUG : Plot dummy waypoints
+        # dummy_waypoints = [(1, 1),(2, 2),(3, 3),(4, 4), (5, 5)]
+        # if waypoints and dummy_waypoints:
+        #     waypoint_coords = np.array(dummy_waypoints)
+        #     plt.scatter(waypoint_coords[:, 0], waypoint_coords[:, 1], color="red", s=80, marker="o", edgecolors="black", label="Waypoints")
+
+        # For DEBUG go to main.py
+        # Plot local paths
+        if local_paths and self.local_paths:
+            for path in self.local_paths.values():
+                local_coords = np.array(path)
+                plt.plot(local_coords[:, 0], local_coords[:, 1], 'g--', linewidth=1.5, label="Local Paths")
+
+        # Plot start and goal points
+        if self.start and self.goal:
+            plt.scatter(self.start[0], self.start[1], color="green", marker="*", s=200, edgecolors="black", label="Start")
+            plt.scatter(self.goal[0], self.goal[1], color="magenta", marker="x", s=200, linewidths=3, label="Goal")
+
+        plt.legend(loc='upper right')
+        plt.title("Path Planning Visualization")
+
+        if timer:
+            plt.draw()
+            plt.pause(timer)
+        else:
+            plt.show()
+
 
