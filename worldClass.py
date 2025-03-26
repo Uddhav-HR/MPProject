@@ -74,7 +74,6 @@ class World:
         self.full_path = list()
 
 
-
     def generate_endpoints(self):
         """
         Plots start and goal points in already generated state space.
@@ -97,47 +96,6 @@ class World:
         print("generate_endpoints() called")
         print(f"start:{self.start}, goal:{self.goal}")
         pass
-
-
-
-    def run_global(self, GP):
-        """
-        Generates the global planner solution.
-
-        Args:
-            GP (function) : global planner function
-
-        Returns:
-            waypoints (list) : list of waypoints for local planner to follow
-        """
-
-        if not callable(GP):
-            print("run_global() called incorrectly -> GP is not a function")
-            return
-        
-        print(f"Global Planner : {str(GP.__name__)}")
-
-
-
-    def run_local(self, LP, w1, w2):
-        """
-        Generates the local planner solution given 2 waypoints.
-
-        Args:
-            LP (function) : local planner function
-            w1 (tuple) : waypoint 1 coordinate
-            w2 (tuple) : waypoint 2 coordinate
-
-        Returns:
-            local_path (list) : points on the local planner solution
-        """
-
-        if not callable(LP):
-            print("run_local() called incorrectly -> LP is not a function")
-            return
-        
-        print(f"Local Planner : {str(LP.__name__)} between {w1} and {w2}")
-
 
 
     def display(self, waypoints=False, local_paths=False, timer=0):
