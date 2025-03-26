@@ -7,8 +7,9 @@ from planner import *
 def main():
     
     # world = worldClass.World(state, size, obstacles)
-    state = 0
+    state = 3
     world = worldClass.World(state = state)
+    print("World Object generated")
     
     world.generate_endpoints()
     world.display()
@@ -23,7 +24,8 @@ def main():
     """
 
     GP = global_planner("global_planner_name")
-    world.run_global(GP)
+    print(f"Global Planner : {str(GP.__name__)}")
+    world.waypoints = GP(world.start, world.goal, world.size, world.obstacles)
     world.display(waypoints = True)
     print("Displaying environment with waypoints")
 
@@ -36,13 +38,13 @@ def main():
 
     # Let world.run_local() return all points on path INCLUDING start and goal
     LP = local_planner("local_planner_name")
-    waypoints = world.waypoints
-    world.local_paths = {}
-    for i in (range(len(waypoints[:-1]))):
-        w1, w2 = waypoints[i], waypoints[i+1]
-        world.local_paths[(w1, w2)] = world.run_local(LP, w1, w2)
+    print(f"Local Planner : {str(LP.__name__)}")
+
+    for i in (range(len(world.waypoints[:-1]))):
+        w1, w2 = world.waypoints[i], world.waypoints[i+1]
+        world.local_paths[(w1, w2)] = LP(w1, w2, world.size, world.obstacles)
         world.display(waypoints = True, local_paths = True, timer=2)
-        print(f"Displaying environment with waypoints and local paths between w1 to w{i+2}")
+        print(f"Displaying environment with waypoints and local paths between {w1} to {w2}")
 
     # # DEBUG : Dummy locally planned path test
     # LP = local_planner("local_planner_name")
@@ -61,11 +63,8 @@ def main():
     #     print(f"Displaying environment with waypoints and local paths between w1 to w{i+2}")
     
     # Generate the full final path for the world object
-    world.full_path = []
     for key in world.local_paths.keys():
-        mini_path = (world.local_paths[key])[:-1]
-        # Omit just the goal from each path
-        world.full_path.extend(mini_path)
+        world.full_path.extend(world.local_paths[key][:-1])
     world.full_path.append(world.goal)
 
     """
